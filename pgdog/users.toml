@@ -1,10 +1,10 @@
-[users.postgres]
-pool_size = 20
-username = "postgres"
+[[users]]
+name = "postgres"
 password = "secret"
+pool_size = 20
 min_pool_size = 5
 
-[users.admin]
-pool_size = 5
-username = "admin"
+[[users]]
+name = "admin"
 password = "admin"
+pool_size = 5

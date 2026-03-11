@@ -5,6 +5,7 @@ FROM ghcr.io/pgdogdev/pgdog:main
 
 # Copy configuration
 COPY pgdog.toml /etc/pgdog/pgdog.toml
+COPY users.toml /etc/pgdog/users.toml
 
 # Copy entrypoint
 COPY entrypoint.sh /entrypoint.sh
