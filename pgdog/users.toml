@@ -3,8 +3,10 @@ name = "postgres"
 password = "secret"
 pool_size = 20
 min_pool_size = 5
+databases = ["appdb"]
 
 [[users]]
 name = "admin"
 password = "admin"
 pool_size = 5
+databases = ["pgdog"]

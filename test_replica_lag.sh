@@ -42,8 +42,8 @@ echo "[$(date +%H:%M:%S)] PgDog pool status (after 5s lag):"
 PGPASSWORD=admin psql -h 127.0.0.1 -p 6432 -U admin -d pgdog -c "SHOW POOLS" 2>/dev/null
 
 echo ""
-echo "[$(date +%H:%M:%S)] Load balancing test (both replicas should still receive queries):"
-echo "  Note: PgDog does NOT detect replication lag. Lagging replicas remain in the pool."
+echo "[$(date +%H:%M:%S)] Load balancing test (lagging replica should be banned if it exceeds threshold):"
+echo "  Note: PgDog detects replication lag via ban_replica_lag setting."
 for i in {1..5}; do
     ip=$(PGPASSWORD=secret psql -h 127.0.0.1 -p 6432 -U postgres -d appdb -t -c "SELECT inet_server_addr();" 2>/dev/null | tr -d '[:space:]')
     echo "    Query $i: $ip"

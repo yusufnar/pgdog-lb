@@ -119,6 +119,7 @@ PGPASSWORD=secret psql -h localhost -p 5432 -U postgres -d appdb
 | `primary_reads_enabled` | `false` | Primary excluded from read queries |
 | `healthcheck_delay` | `1000` | Health check interval (1 second) |
 | `healthcheck_timeout` | `2000` | Health check timeout (2 seconds) |
+| `ban_replica_lag` | `30000` | Ban threshold for replication lag (ms) |
 | `ban_time` | `10` | Ban duration for failed servers (seconds) |
 
 ### Server Configuration
@@ -137,14 +138,14 @@ servers = [
 
 | Feature | PgPool-II | PgDog |
 |---------|-----------|-------|
-| Replication lag detection | ✅ Built-in (`delay_threshold`) | ❌ Not supported |
+| Replication lag detection | ✅ Built-in (`delay_threshold`) | ✅ Built-in (`ban_replica_lag`) |
 | Auto failback | ✅ `auto_failback = on` | ✅ Auto un-ban after `ban_time` |
 | Weight-based LB | ✅ Per-backend weights | ❌ Random or LOC mode |
 | Admin interface | `SHOW POOL_NODES` | `SHOW POOLS` / `SHOW DATABASES` |
 | Connection pooling | Process-based | Thread-based (more efficient) |
 | Config format | `.conf` (key=value) | `.toml` |
 
-> **Note**: PgDog does not have built-in replication lag detection. If a replica is lagging but still healthy, it will continue to receive read queries. For lag-aware routing, an external monitoring solution would be needed.
+> **Note**: PgDog supports replication lag detection via the `ban_replica_lag` setting. If a replica lags beyond this threshold, it will be temporarily banned from the pool.
 
 ## 📁 Project Structure
 
