@@ -1,0 +1,97 @@
+# PgDog Configuration File
+# Read Load Balancing for PostgreSQL
+
+#------------------------------------------------------------------------------
+# GENERAL SETTINGS
+#------------------------------------------------------------------------------
+[general]
+
+# Listen on all interfaces
+host = "0.0.0.0"
+
+# PgDog default port
+port = 6432
+
+# Admin interface credentials (for SHOW POOLS, SHOW DATABASES, etc.)
+
+# Connection timeout (ms)
+connect_timeout = 5000
+
+# Idle server connection timeout (ms)
+idle_timeout = 30000
+
+# Max connection lifetime (ms) - 10 minutes
+server_lifetime = 600000
+
+# Health check timeout (ms)
+healthcheck_timeout = 2000
+
+# Health check interval (ms) - check every 1 second
+healthcheck_interval = 1000
+
+# Ban time for failed health checks (seconds)
+ban_timeout = 10
+
+# Logging
+log_connections = true
+log_disconnections = true
+
+# TLS disabled for local Docker network
+
+# Worker threads
+workers = 4
+
+# Auto-reload config on change (ms)
+
+# Shutdown grace period (ms)
+shutdown_timeout = 60000
+
+# TCP keepalive settings
+
+# Prometheus exporter
+
+openmetrics_port = 9930
+
+#------------------------------------------------------------------------------
+# POOL: appdb
+#------------------------------------------------------------------------------
+[pools.appdb]
+
+# Transaction-level pooling
+pooler_mode = "transaction"
+
+# Random load balancing across replicas
+load_balancing_strategy = "random"
+
+# Default role: send queries to replicas
+# (equivalent to pgpool backend_weight0 = 0)
+default_role = "replica"
+
+# Enable query parser for read/write splitting
+query_parser_enabled = true
+read_write_split = true
+
+# Allow reads to fall back to primary when all replicas are down
+
+# Sharding function (required but we only have 1 shard)
+sharding_function = "pg_bigint_hash"
+
+#------------------------------------------------------------------------------
+# USER: postgres
+#------------------------------------------------------------------------------
+[pools.appdb.users.0]
+username = "postgres"
+password = "secret"
+pool_size = 20
+min_pool_size = 5
+
+#------------------------------------------------------------------------------
+# SHARD 0: All servers (primary + replicas)
+#------------------------------------------------------------------------------
+[pools.appdb.shards.0]
+servers = [
+    ["pg-primary", 5432, "primary"],
+    ["pg-replica1", 5432, "replica"],
+    ["pg-replica2", 5432, "replica"]
+]
+database = "appdb"

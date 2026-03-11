@@ -1,0 +1,10 @@
+[users.postgres]
+pool_size = 20
+username = "postgres"
+password = "secret"
+min_pool_size = 5
+
+[users.admin]
+pool_size = 5
+username = "admin"
+password = "admin"

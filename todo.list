@@ -1,0 +1,2 @@
+* if primary is down/detached it can't calculate replication lag. use a sidecar?
+* primary failed. pgpool failed to route read traffic to replicas. if pgpool-read is restarted, pgpool continues to load balance to replicas
