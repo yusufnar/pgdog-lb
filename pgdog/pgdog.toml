@@ -15,10 +15,15 @@ ban_timeout = 10000
 
 log_connections = true
 log_disconnections = true
-lsn_check_delay = 1000
+lsn_check_delay = 0
+lsn_check_interval = 1000
 ban_replica_lag = 2000
 openmetrics_port = 9930
 shutdown_timeout = 60000
+
+[admin]
+user = "admin"
+password = "admin"
 
 pooler_mode = "transaction"
 load_balancing_strategy = "random"
@@ -33,7 +38,7 @@ name = "appdb"
 database_name = "appdb"
 host = "pg-primary"
 port = 5432
-role = "primary"
+role = "auto"
 shard = 0
 
 [[databases]]
