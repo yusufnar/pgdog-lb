@@ -21,10 +21,6 @@ ban_replica_lag = 2000
 openmetrics_port = 9930
 shutdown_timeout = 60000
 
-[admin]
-user = "admin"
-password = "admin"
-
 pooler_mode = "transaction"
 load_balancing_strategy = "random"
 query_parser = "on"

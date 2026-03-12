@@ -1,0 +1,29 @@
+# PgDog Configuration Template
+# Managed by monitor_lag.sh - DON'T EDIT /etc/pgdog/pgdog.toml DIRECTLY
+
+[general]
+host = "0.0.0.0"
+port = 6432
+workers = 4
+
+connect_timeout = 5000
+idle_timeout = 30000
+server_lifetime = 600000
+healthcheck_timeout = 2000
+healthcheck_interval = 1000
+ban_timeout = 10000
+
+log_connections = true
+log_disconnections = true
+lsn_check_delay = 0
+lsn_check_interval = 1000
+ban_replica_lag = 0 # Built-in disabled, using manual script instead
+openmetrics_port = 9930
+shutdown_timeout = 60000
+
+pooler_mode = "transaction"
+load_balancing_strategy = "random"
+query_parser = "on"
+read_write_strategy = "conservative"
+
+# Nodes will be appended below by monitor_lag.sh

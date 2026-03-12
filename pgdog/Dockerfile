@@ -7,9 +7,10 @@ FROM ghcr.io/pgdogdev/pgdog:main
 COPY pgdog.toml /etc/pgdog/pgdog.toml
 COPY users.toml /etc/pgdog/users.toml
 
-# Copy entrypoint
+COPY pgdog.toml.template /pgdog.toml.template
+COPY monitor_lag.sh /monitor_lag.sh
 COPY entrypoint.sh /entrypoint.sh
-RUN chmod +x /entrypoint.sh
+RUN chmod +x /monitor_lag.sh /entrypoint.sh
 
 # PgDog default port + Prometheus exporter
 EXPOSE 6432 9930
