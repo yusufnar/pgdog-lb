@@ -46,7 +46,7 @@ while true; do
     error_count=0
     
     for i in {1..10}; do
-        ip=$(PGPASSWORD=secret psql -h $PGDOG_HOST -p $PGDOG_PORT -U $USER -d $DB -t -c "SELECT inet_server_addr() as node, pg_sleep(0.2);" 2>/dev/null | awk -F'|' '{print $1}' | tr -d '[:space:]')
+        ip=$(PGPASSWORD=secret psql -h $PGDOG_HOST -p $PGDOG_PORT -U $USER -d $DB -t -c "SELECT inet_server_addr();" 2>/dev/null | awk -F'|' '{print $1}' | tr -d '[:space:]')
         
         if [ -n "$ip" ]; then
             node=$(get_node "$ip")

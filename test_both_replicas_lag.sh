@@ -3,7 +3,7 @@
 # Test Artificial Lag on BOTH Replicas
 # Pauses WAL replay on both pg-replica1 and pg-replica2
 
-PAUSE_DURATION=20
+PAUSE_DURATION=${1:-20}
 
 echo "╔══════════════════════════════════════════════════════════════╗"
 echo "║    ARTIFICIAL LAG TEST - BOTH REPLICAS                       ║"

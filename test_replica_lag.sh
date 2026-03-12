@@ -4,7 +4,7 @@
 # Pauses WAL replay on pg-replica1 to simulate replication lag
 
 REPLICA="pg-replica1"
-PAUSE_DURATION=20
+PAUSE_DURATION=${1:-20}
 
 echo "╔══════════════════════════════════════════════════════════════╗"
 echo "║          ARTIFICIAL LAG TEST - $REPLICA                      ║"

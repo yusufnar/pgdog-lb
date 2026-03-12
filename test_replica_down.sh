@@ -4,7 +4,7 @@
 # Stops pg-replica1 completely to test PgDog failover behavior
 
 REPLICA="pg-replica1"
-DOWN_DURATION=20
+DOWN_DURATION=${1:-20}
 
 echo "╔══════════════════════════════════════════════════════════════╗"
 echo "║    REPLICA DOWN TEST - $REPLICA                              ║"

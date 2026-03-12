@@ -3,7 +3,7 @@
 # Test Both Replicas Down Scenario
 # Stops both pg-replica1 and pg-replica2 to test PgDog behavior
 
-DOWN_DURATION=10
+DOWN_DURATION=${1:-10}
 
 echo "╔══════════════════════════════════════════════════════════════╗"
 echo "║    BOTH REPLICAS DOWN TEST                                   ║"
