@@ -65,7 +65,7 @@ name = "$DB_NAME"
 database_name = "$DB_NAME"
 host = "$PRIMARY_HOST"
 port = 5432
-role = "auto"
+role = "primary"
 shard = 0
 EOF
     fi
