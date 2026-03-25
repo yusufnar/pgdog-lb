@@ -19,7 +19,7 @@ lsn_check_delay = 0
 lsn_check_interval = 1000
 ban_replica_lag = 0 # Built-in disabled, using manual script instead
 openmetrics_port = 9930
-shutdown_timeout = 60000
+shutdown_timeout = 600000
 
 pooler_mode = "transaction"
 load_balancing_strategy = "random"
