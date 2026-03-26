@@ -2,7 +2,7 @@
 # monitor_lag.sh - Monitors replication lag and updates PgDog config dynamically.
 # Threshold for replica lag in milliseconds.
 LAG_THRESHOLD=1000
-CHECK_INTERVAL=0.2
+CHECK_INTERVAL=1
 CONFIG_TEMPLATE="/etc/pgdog/pgdog.toml.template"
 CONFIG_FILE="/etc/pgdog/pgdog.toml"
 DB_NAME="appdb"
@@ -57,7 +57,7 @@ update_config() {
 
     cp "$CONFIG_TEMPLATE" "$CONFIG_FILE.new"
 
-    echo "Setting PRIMARY config block with lb_weight=$primary_weight"
+    echo "[$(date +'%Y-%m-%d %H:%M:%S')] Setting PRIMARY config block with lb_weight=$primary_weight"
     cat >> "$CONFIG_FILE.new" <<EOF
 
 [[databases]]
@@ -73,7 +73,7 @@ EOF
     # Add all Replicas
     for replica_info in "${replicas[@]}"; do
         IFS=':' read -r replica weight <<< "$replica_info"
-        echo "Setting REPLICA $replica config block with lb_weight=$weight"
+        echo "[$(date +'%Y-%m-%d %H:%M:%S')] Setting REPLICA $replica config block with lb_weight=$weight"
         cat >> "$CONFIG_FILE.new" <<EOF
 
 [[databases]]
@@ -90,14 +90,14 @@ EOF
     # Check if config actually changed
     if ! diff "$CONFIG_FILE" "$CONFIG_FILE.new" > /dev/null 2>&1; then
         mv "$CONFIG_FILE.new" "$CONFIG_FILE"
-        echo "Config changed [PrimaryWeight:$primary_weight], reloading PgDog..."
+        echo "[$(date +'%Y-%m-%d %H:%M:%S')] Config changed [PrimaryWeight:$primary_weight], reloading PgDog..."
         pkill -HUP pgdog
     else
         rm "$CONFIG_FILE.new"
     fi
 }
 
-echo "Starting PgDog Lag Monitor..."
+echo "[$(date +'%Y-%m-%d %H:%M:%S')] Starting PgDog Lag Monitor..."
 export PGPASSWORD="secret"
 
 while true; do
@@ -111,7 +111,7 @@ while true; do
             replica_weights+=("$replica:1")
             ((healthy_count++))
         else
-            echo "$replica is UNHEALTHY or lag too high (lag: ${lag:-N/A}ms)"
+            echo "[$(date +'%Y-%m-%d %H:%M:%S')] 🚨 LAG DETECTED: $replica is UNHEALTHY or lag too high (lag: ${lag:-N/A}ms)"
             replica_weights+=("$replica:0")
         fi
     done
