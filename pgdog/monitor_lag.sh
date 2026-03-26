@@ -1,8 +1,8 @@
 #!/bin/bash
 # monitor_lag.sh - Monitors replication lag and updates PgDog config dynamically.
 # Threshold for replica lag in milliseconds.
-LAG_THRESHOLD=2000
-CHECK_INTERVAL=1
+LAG_THRESHOLD=1000
+CHECK_INTERVAL=0.2
 CONFIG_TEMPLATE="/etc/pgdog/pgdog.toml.template"
 CONFIG_FILE="/etc/pgdog/pgdog.toml"
 DB_NAME="appdb"
@@ -45,20 +45,20 @@ get_lag_ms() {
 }
 
 update_config() {
-    local active_replicas=("$@")
-    local use_primary=false
+    local healthy_count=$1
+    shift
+    local replicas=("$@")
     
-    # If no healthy replicas, or if specified by logic, we add primary.
-    if [ ${#active_replicas[@]} -eq 0 ]; then
-        use_primary=true
+    local primary_weight=0
+    # If no healthy replicas, we shift read traffic to primary by giving it weight 1
+    if [ "$healthy_count" -eq 0 ]; then
+        primary_weight=1
     fi
 
     cp "$CONFIG_TEMPLATE" "$CONFIG_FILE.new"
 
-    # Add Primary if needed
-    if [ "$use_primary" = true ]; then
-        echo "Adding PRIMARY to config as fallback"
-        cat >> "$CONFIG_FILE.new" <<EOF
+    echo "Setting PRIMARY config block with lb_weight=$primary_weight"
+    cat >> "$CONFIG_FILE.new" <<EOF
 
 [[databases]]
 name = "$DB_NAME"
@@ -67,12 +67,13 @@ host = "$PRIMARY_HOST"
 port = 5432
 role = "primary"
 shard = 0
+lb_weight = $primary_weight
 EOF
-    fi
 
-    # Add active Replicas
-    for replica in "${active_replicas[@]}"; do
-        echo "Adding $replica to config"
+    # Add all Replicas
+    for replica_info in "${replicas[@]}"; do
+        IFS=':' read -r replica weight <<< "$replica_info"
+        echo "Setting REPLICA $replica config block with lb_weight=$weight"
         cat >> "$CONFIG_FILE.new" <<EOF
 
 [[databases]]
@@ -82,13 +83,14 @@ host = "$replica"
 port = 5432
 role = "replica"
 shard = 0
+lb_weight = $weight
 EOF
     done
 
     # Check if config actually changed
     if ! diff "$CONFIG_FILE" "$CONFIG_FILE.new" > /dev/null 2>&1; then
         mv "$CONFIG_FILE.new" "$CONFIG_FILE"
-        echo "Config changed [${active_replicas[*]}] [Primary:$use_primary], reloading PgDog..."
+        echo "Config changed [PrimaryWeight:$primary_weight], reloading PgDog..."
         pkill -HUP pgdog
     else
         rm "$CONFIG_FILE.new"
@@ -99,17 +101,21 @@ echo "Starting PgDog Lag Monitor..."
 export PGPASSWORD="secret"
 
 while true; do
-    healthy_replicas=()
+    healthy_count=0
+    replica_weights=()
     
-    for replica in "${!REPLICA_MAP[@]}"; do
+    # Sort replicas to ensure deterministic config generation
+    for replica in $(echo "${!REPLICA_MAP[@]}" | tr ' ' '\n' | sort); do
         lag=$(get_lag_ms "$replica")
-        if [ ! -z "$lag" ] && [ "$lag" != "-1" ] && [ "$lag" -lt "$LAG_THRESHOLD" ]; then
-            healthy_replicas+=("$replica")
+        if [ -n "$lag" ] && [ "$lag" != "-1" ] && [ "$lag" -lt "$LAG_THRESHOLD" ]; then
+            replica_weights+=("$replica:1")
+            ((healthy_count++))
         else
             echo "$replica is UNHEALTHY or lag too high (lag: ${lag:-N/A}ms)"
+            replica_weights+=("$replica:0")
         fi
     done
 
-    update_config "${healthy_replicas[@]}"
+    update_config "$healthy_count" "${replica_weights[@]}"
     sleep "$CHECK_INTERVAL"
 done

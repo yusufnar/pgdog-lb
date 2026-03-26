@@ -1,3 +1,5 @@
 * if primary is down/detached it can't calculate replication lag. use a sidecar?
 * primary failed. pgpool failed to route read traffic to replicas. if pgpool-read is restarted, pgpool continues to load balance to replicas
 * use ban_replica_lag instead of the monitor_lag.sh script https://docs.pgdog.dev/features/load-balancer/replication-failover/ 
+* lb_weight: https://github.com/pgdogdev/pgdog/commit/a1590ebf7c31afa6f8d405b9bb4f932528ec63d3
+* ban_replica_lag: https://github.com/pgdogdev/pgdog/commit/e1c7036a4a9f204d3439626636546d2bb08330cf

@@ -11,6 +11,7 @@ idle_timeout = 30000
 server_lifetime = 600000
 healthcheck_timeout = 2000
 healthcheck_interval = 1000
+idle_healthcheck_interval = 1000
 ban_timeout = 10000
 
 log_connections = true
@@ -22,7 +23,7 @@ openmetrics_port = 9930
 shutdown_timeout = 600000
 
 pooler_mode = "transaction"
-load_balancing_strategy = "random"
+load_balancing_strategy = "weighted_round_robin"
 query_parser = "on"
 read_write_strategy = "conservative"
 

@@ -34,8 +34,6 @@ echo "[$(date +%H:%M:%S)] Generating writes on primary to create lag..."
 docker exec pg-primary psql -U postgres -d appdb -c "INSERT INTO ynar (info) VALUES ('lag_test');" >/dev/null 2>&1
 echo "  Inserted row"
 
-sleep 5
-
 # Show PgDog status after lag created
 echo ""
 echo "[$(date +%H:%M:%S)] PgDog pool status (after 5s lag):"
@@ -55,7 +53,7 @@ echo "[$(date +%H:%M:%S)] Current lag status (replica is paused):"
 docker exec pg-primary psql -U postgres -c "SELECT client_addr, state, replay_lag FROM pg_stat_replication;" 2>/dev/null
 
 # Wait remaining time
-remaining=$((PAUSE_DURATION - 5))
+remaining=$((PAUSE_DURATION))
 echo ""
 echo "[$(date +%H:%M:%S)] Waiting ${remaining}s before resuming..."
 sleep $remaining
