@@ -11,8 +11,11 @@ echo "╚═══════════════════════�
 echo ""
 
 # Check current lag before pause
-echo "[$(date +%H:%M:%S)] Current replication status:"
-docker exec pg-primary psql -U postgres -c "SELECT client_addr, state, replay_lag FROM pg_stat_replication;" 2>/dev/null
+echo "[$(date +%H:%M:%S)] Current replication lag:"
+echo "pg-replica1:"
+docker exec pg-replica1 psql -U postgres -c "SELECT pg_last_wal_receive_lsn(), pg_last_wal_replay_lsn(), CASE WHEN pg_last_wal_receive_lsn() = pg_last_wal_replay_lsn() THEN 0 ELSE GREATEST(0, EXTRACT(EPOCH FROM now() - pg_last_xact_replay_timestamp())) * 1000 END as lag_ms;" 2>/dev/null
+echo "pg-replica2:"
+docker exec pg-replica2 psql -U postgres -c "SELECT pg_last_wal_receive_lsn(), pg_last_wal_replay_lsn(), CASE WHEN pg_last_wal_receive_lsn() = pg_last_wal_replay_lsn() THEN 0 ELSE GREATEST(0, EXTRACT(EPOCH FROM now() - pg_last_xact_replay_timestamp())) * 1000 END as lag_ms;" 2>/dev/null
 
 echo ""
 echo "[$(date +%H:%M:%S)] Pausing WAL replay on BOTH replicas..."
@@ -48,13 +51,21 @@ done
 # Check lag during pause
 echo ""
 echo "[$(date +%H:%M:%S)] Current lag status (both replicas paused):"
-docker exec pg-primary psql -U postgres -c "SELECT client_addr, state, replay_lag FROM pg_stat_replication;" 2>/dev/null
+echo "pg-replica1:"
+docker exec pg-replica1 psql -U postgres -c "SELECT pg_last_wal_receive_lsn(), pg_last_wal_replay_lsn(), CASE WHEN pg_last_wal_receive_lsn() = pg_last_wal_replay_lsn() THEN 0 ELSE GREATEST(0, EXTRACT(EPOCH FROM now() - pg_last_xact_replay_timestamp())) * 1000 END as lag_ms;" 2>/dev/null
+echo "pg-replica2:"
+docker exec pg-replica2 psql -U postgres -c "SELECT pg_last_wal_receive_lsn(), pg_last_wal_replay_lsn(), CASE WHEN pg_last_wal_receive_lsn() = pg_last_wal_replay_lsn() THEN 0 ELSE GREATEST(0, EXTRACT(EPOCH FROM now() - pg_last_xact_replay_timestamp())) * 1000 END as lag_ms;" 2>/dev/null
 
 # Wait remaining time
 remaining=$((PAUSE_DURATION - 5))
 echo ""
-echo "[$(date +%H:%M:%S)] Waiting ${remaining}s before resuming..."
-sleep $remaining
+echo "[$(date +%H:%M:%S)] Monitoring lag for ${remaining}s before resuming..."
+for (( i=1; i<=remaining; i++ )); do
+    lag1=$(docker exec pg-replica1 psql -U postgres -t -c "SELECT CASE WHEN pg_last_wal_receive_lsn() = pg_last_wal_replay_lsn() THEN 0 ELSE GREATEST(0, EXTRACT(EPOCH FROM now() - pg_last_xact_replay_timestamp())) * 1000 END;" 2>/dev/null | tr -d '[:space:]')
+    lag2=$(docker exec pg-replica2 psql -U postgres -t -c "SELECT CASE WHEN pg_last_wal_receive_lsn() = pg_last_wal_replay_lsn() THEN 0 ELSE GREATEST(0, EXTRACT(EPOCH FROM now() - pg_last_xact_replay_timestamp())) * 1000 END;" 2>/dev/null | tr -d '[:space:]')
+    echo "[$(date +%H:%M:%S)] [$i/$remaining] pg-replica1: ${lag1:-N/A}ms | pg-replica2: ${lag2:-N/A}ms"
+    sleep 1
+done
 
 # Resume WAL replay on both
 echo ""
@@ -75,8 +86,11 @@ sleep 3
 
 # Final status
 echo ""
-echo "[$(date +%H:%M:%S)] Final replication status:"
-docker exec pg-primary psql -U postgres -c "SELECT client_addr, state, replay_lag FROM pg_stat_replication;" 2>/dev/null
+echo "[$(date +%H:%M:%S)] Final replication lag:"
+echo "pg-replica1:"
+docker exec pg-replica1 psql -U postgres -c "SELECT pg_last_wal_receive_lsn(), pg_last_wal_replay_lsn(), CASE WHEN pg_last_wal_receive_lsn() = pg_last_wal_replay_lsn() THEN 0 ELSE GREATEST(0, EXTRACT(EPOCH FROM now() - pg_last_xact_replay_timestamp())) * 1000 END as lag_ms;" 2>/dev/null
+echo "pg-replica2:"
+docker exec pg-replica2 psql -U postgres -c "SELECT pg_last_wal_receive_lsn(), pg_last_wal_replay_lsn(), CASE WHEN pg_last_wal_receive_lsn() = pg_last_wal_replay_lsn() THEN 0 ELSE GREATEST(0, EXTRACT(EPOCH FROM now() - pg_last_xact_replay_timestamp())) * 1000 END as lag_ms;" 2>/dev/null
 
 echo ""
 echo "[$(date +%H:%M:%S)] Final PgDog pool status:"

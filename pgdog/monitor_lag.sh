@@ -8,38 +8,25 @@ CONFIG_FILE="/etc/pgdog/pgdog.toml"
 DB_NAME="appdb"
 PRIMARY_HOST="pg-primary"
 
-# Map: Hostname in Docker network -> application_name in pg_stat_replication
-declare -A REPLICA_MAP
-REPLICA_MAP["pg-replica1"]="pg_replica1"
-REPLICA_MAP["pg-replica2"]="pg_replica2"
+# List of replicas to monitor
+REPLICAS=("pg-replica1" "pg-replica2")
 
 # Function to get lag in ms. Returns -1 if down.
 get_lag_ms() {
     local host=$1
-    local app_name=${REPLICA_MAP[$host]}
     
     # We check if the node is alive first
     if ! pg_isready -h "$host" -p 5432 -t 1 > /dev/null 2>&1; then
+        echo -1
         return
     fi
 
-    # Query the primary for this replica's lag 
-    # pg_stat_replication.replay_lag is an interval.
-    # Convert interval to ms. 
-    # We check using application_name which is more reliable.
-    local lag=$(psql -h "$PRIMARY_HOST" -U postgres -Atc "SELECT EXTRACT(EPOCH FROM replay_lag) * 1000 FROM pg_stat_replication WHERE application_name = '$app_name'" 2>/dev/null)
+    # Query the replica directly for lag
+    local lag=$(psql -h "$host" -U postgres -Atc "SELECT CASE WHEN pg_last_wal_receive_lsn() = pg_last_wal_replay_lsn() THEN 0 ELSE GREATEST(0, EXTRACT(EPOCH FROM now() - pg_last_xact_replay_timestamp())) * 1000 END" 2>/dev/null)
     
-    if [ -z "$lag" ]; then
-        # Check if the replica is even connected to primary
-        local is_connected=$(psql -h "$PRIMARY_HOST" -U postgres -Atc "SELECT count(*) FROM pg_stat_replication WHERE application_name = '$app_name'")
-        if [ "$is_connected" -eq 0 ]; then
-            echo -1
-        else
-            # Connected but lag is 0 (shows as null sometimes if no activity)
-            echo 0
-        fi
+    if [ -z "$lag" ] || [ "$lag" = "NaN" ]; then
+        echo -1
     else
-        # Round to integer
         printf "%.0f" "$lag"
     fi
 }
@@ -105,7 +92,7 @@ while true; do
     replica_weights=()
     
     # Sort replicas to ensure deterministic config generation
-    for replica in $(echo "${!REPLICA_MAP[@]}" | tr ' ' '\n' | sort); do
+    for replica in $(echo "${REPLICAS[@]}" | tr ' ' '\n' | sort); do
         lag=$(get_lag_ms "$replica")
         if [ -n "$lag" ] && [ "$lag" != "-1" ] && [ "$lag" -lt "$LAG_THRESHOLD" ]; then
             replica_weights+=("$replica:1")
