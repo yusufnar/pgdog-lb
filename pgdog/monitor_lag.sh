@@ -36,8 +36,19 @@ update_config() {
     shift
     local replicas=("$@")
     
+    # Separate replicas from down replicas (down replicas have empty weight)
+    local active_replicas=()
+    local down_replicas=()
+    for replica_info in "${replicas[@]}"; do
+        IFS=':' read -r replica weight <<< "$replica_info"
+        if [ -z "$weight" ]; then
+            down_replicas+=("$replica")
+        else
+            active_replicas+=("$replica_info")
+        fi
+    done
+    
     local primary_weight=0
-    # If no healthy replicas, we shift read traffic to primary by giving it weight 1
     if [ "$healthy_count" -eq 0 ]; then
         primary_weight=1
     fi
@@ -57,8 +68,8 @@ shard = 0
 lb_weight = $primary_weight
 EOF
 
-    # Add all Replicas
-    for replica_info in "${replicas[@]}"; do
+    # Add only active Replicas
+    for replica_info in "${active_replicas[@]}"; do
         IFS=':' read -r replica weight <<< "$replica_info"
         echo "[$(date +'%Y-%m-%d %H:%M:%S')] Setting REPLICA $replica config block with lb_weight=$weight"
         cat >> "$CONFIG_FILE.new" <<EOF
@@ -77,7 +88,7 @@ EOF
     # Check if config actually changed
     if ! diff "$CONFIG_FILE" "$CONFIG_FILE.new" > /dev/null 2>&1; then
         mv "$CONFIG_FILE.new" "$CONFIG_FILE"
-        echo "[$(date +'%Y-%m-%d %H:%M:%S')] Config changed [PrimaryWeight:$primary_weight], reloading PgDog..."
+        echo "[$(date +'%Y-%m-%d %H:%M:%S')] Config changed [PrimaryWeight:$primary_weight, ActiveReplicas:${#active_replicas[@]}], reloading PgDog..."
         pkill -HUP pgdog
     else
         rm "$CONFIG_FILE.new"
@@ -97,8 +108,11 @@ while true; do
         if [ -n "$lag" ] && [ "$lag" != "-1" ] && [ "$lag" -lt "$LAG_THRESHOLD" ]; then
             replica_weights+=("$replica:1")
             ((healthy_count++))
+        elif [ "$lag" = "-1" ]; then
+            echo "[$(date +'%Y-%m-%d %H:%M:%S')] 🚨 REPLICA DOWN: $replica is unreachable, removing from config"
+            replica_weights+=("$replica:")  # empty weight = remove from config
         else
-            echo "[$(date +'%Y-%m-%d %H:%M:%S')] 🚨 LAG DETECTED: $replica is UNHEALTHY or lag too high (lag: ${lag:-N/A}ms)"
+            echo "[$(date +'%Y-%m-%d %H:%M:%S')] 🚨 LAG DETECTED: $replica lag too high (lag: ${lag:-N/A}ms), setting weight=0"
             replica_weights+=("$replica:0")
         fi
     done
