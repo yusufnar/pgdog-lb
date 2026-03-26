@@ -34,6 +34,8 @@ echo "[$(date +%H:%M:%S)] Generating writes on primary to create lag..."
 docker exec pg-primary psql -U postgres -d appdb -c "INSERT INTO ynar (info) VALUES ('lag_test');" >/dev/null 2>&1
 echo "  Inserted row"
 
+sleep 1
+
 # Show PgDog status after lag created
 echo ""
 echo "[$(date +%H:%M:%S)] PgDog pool status (after 5s lag):"
@@ -57,8 +59,8 @@ remaining=$((PAUSE_DURATION))
 echo ""
 echo "[$(date +%H:%M:%S)] Monitoring lag for ${remaining}s before resuming..."
 for (( i=1; i<=remaining; i++ )); do
-    lag_ms=$(docker exec $REPLICA psql -U postgres -t -c "SELECT CASE WHEN pg_last_wal_receive_lsn() = pg_last_wal_replay_lsn() THEN 0 ELSE GREATEST(0, EXTRACT(EPOCH FROM now() - pg_last_xact_replay_timestamp())) * 1000 END;" 2>/dev/null | tr -d '[:space:]')
-    echo "[$(date +%H:%M:%S)] [$i/$remaining] Replication Lag: ${lag_ms:-N/A}ms"
+    lag_sec=$(docker exec $REPLICA psql -U postgres -t -c "SELECT CASE WHEN pg_last_wal_receive_lsn() = pg_last_wal_replay_lsn() THEN 0 ELSE GREATEST(0, EXTRACT(EPOCH FROM now() - pg_last_xact_replay_timestamp())) END;" 2>/dev/null | tr -d '[:space:]')
+    echo "[$(date +%H:%M:%S)] [$i/$remaining] Replication Lag: ${lag_sec:-N/A}sec"
     sleep 1
 done
 

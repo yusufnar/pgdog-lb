@@ -56,8 +56,8 @@ echo "[$(date +%H:%M:%S)] $REPLICA started."
 
 # Wait for recovery
 echo ""
-echo "[$(date +%H:%M:%S)] Waiting 10s for $REPLICA to recover and sync..."
-sleep 10
+echo "[$(date +%H:%M:%S)] Waiting 3s for $REPLICA to recover and sync..."
+sleep 3
 
 # Final status
 echo ""
