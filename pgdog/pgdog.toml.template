@@ -14,8 +14,8 @@ healthcheck_interval = 1000
 idle_healthcheck_interval = 1000
 ban_timeout = 10000
 
-log_connections = true
-log_disconnections = true
+log_connections = false
+log_disconnections = false
 lsn_check_delay = 0
 lsn_check_interval = 1000
 ban_replica_lag = 0 # Built-in disabled, using manual script instead

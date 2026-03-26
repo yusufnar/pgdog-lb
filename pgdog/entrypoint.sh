@@ -13,7 +13,7 @@ if [ ! -f /etc/pgdog/pgdog.toml.template ]; then
 fi
 
 chmod +x /monitor_lag.sh
-/monitor_lag.sh > /var/log/pgdog_monitor.log 2>&1 &
+/monitor_lag.sh &
 
 # Start PgDog
 exec pgdog -c /etc/pgdog/pgdog.toml -u /etc/pgdog/users.toml run

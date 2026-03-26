@@ -1,8 +1,8 @@
 [[users]]
 name = "postgres"
 password = "secret"
-pool_size = 100
-min_pool_size = 50
+pool_size = 50
+min_pool_size = 10
 databases = ["appdb"]
 
 [[users]]
