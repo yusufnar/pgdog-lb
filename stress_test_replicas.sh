@@ -62,7 +62,7 @@ done
 echo "[$(date +%H:%M:%S)] All connections established."
 
 # --- WORKER LOOP ---
-SLEEP_INTERVAL=$(echo "scale=4; $WORKERS / $QPS" | bc -l)
+SLEEP_INTERVAL=$(awk "BEGIN {printf \"%.4f\", $WORKERS/$QPS}")
 
 worker() {
     local fifo=$1

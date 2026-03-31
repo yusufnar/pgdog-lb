@@ -4,4 +4,6 @@ docker exec pg-replica1 psql -U postgres -d appdb -t -c "SELECT state, query, co
 
 docker exec pg-replica1 psql -U postgres -d appdb -t -c "SELECT calls, total_exec_time, mean_exec_time, rows, query FROM pg_stat_statements ORDER BY mean_exec_time DESC;"
 
- docker exec pg-primary psql -U postgres -d appdb -c "\dx" 
+docker exec pg-primary psql -U postgres -d appdb -c "\dx" 
+
+SELECT calls, total_exec_time, mean_exec_time, rows, query FROM pg_stat_statements  where query ilike '%pg_last_xact_replay_timestamp%' ORDER BY mean_exec_time DESC;

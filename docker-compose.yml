@@ -96,6 +96,42 @@ services:
     depends_on:
       - pg-replica2
 
+  pi-exporter-primary:
+    image: andriik/postgres-performance-insights-exporter:latest
+    container_name: pi-exporter-primary
+    environment:
+      - DB_HOST=pg-primary
+      - DB_PORT=5432
+      - DB_NAME=appdb
+      - DB_USER=postgres
+      - DB_PASSWORD=secret
+    depends_on:
+      - pg-primary
+
+  pi-exporter-replica1:
+    image: andriik/postgres-performance-insights-exporter:latest
+    container_name: pi-exporter-replica1
+    environment:
+      - DB_HOST=pg-replica1
+      - DB_PORT=5432
+      - DB_NAME=appdb
+      - DB_USER=postgres
+      - DB_PASSWORD=secret
+    depends_on:
+      - pg-replica1
+
+  pi-exporter-replica2:
+    image: andriik/postgres-performance-insights-exporter:latest
+    container_name: pi-exporter-replica2
+    environment:
+      - DB_HOST=pg-replica2
+      - DB_PORT=5432
+      - DB_NAME=appdb
+      - DB_USER=postgres
+      - DB_PASSWORD=secret
+    depends_on:
+      - pg-replica2
+
   prometheus:
     image: prom/prometheus
     container_name: prometheus

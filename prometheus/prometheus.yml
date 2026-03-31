@@ -5,3 +5,7 @@ scrape_configs:
   - job_name: 'postgres'
     static_configs:
       - targets: ['exporter-primary:9187', 'exporter-replica1:9187', 'exporter-replica2:9187']
+
+  - job_name: 'postgres-pi'
+    static_configs:
+      - targets: ['pi-exporter-primary:9153', 'pi-exporter-replica1:9153', 'pi-exporter-replica2:9153']
