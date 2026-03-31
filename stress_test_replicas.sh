@@ -4,7 +4,7 @@
 REPLICAS=("pg-replica1" "pg-replica2")
 DB_USER="postgres"
 DB_NAME="appdb"
-QPS=100
+QPS=1000
 WORKERS=20  # Number of persistent connections
 
 # Replication lag query

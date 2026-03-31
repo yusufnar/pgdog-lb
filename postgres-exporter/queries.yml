@@ -1,0 +1,47 @@
+pg_stat_activity_active:
+  query: "SELECT count(*) as count, state, COALESCE(wait_event_type, 'CPU') as wait_event_type, wait_event, query_id FROM pg_stat_activity GROUP BY state, wait_event_type, wait_event, query_id"
+  metrics:
+    - state:
+        usage: "LABEL"
+        description: "State of the session"
+    - wait_event_type:
+        usage: "LABEL"
+        description: "Type of wait event"
+    - wait_event:
+        usage: "LABEL"
+        description: "Specific wait event"
+    - query_id:
+        usage: "LABEL"
+        description: "ID of the query being executed"
+    - count:
+        usage: "GAUGE"
+        description: "Number of sessions"
+
+pg_stat_statements_info:
+  query: "SELECT queryid, query, 1 AS info FROM pg_stat_statements"
+  metrics:
+    - queryid:
+        usage: "LABEL"
+        description: "Query ID"
+    - query:
+        usage: "LABEL"
+        description: "Query text"
+    - info:
+        usage: "GAUGE"
+        description: "Constant value for info metric"
+
+pg_stat_statements_metrics:
+  query: "SELECT queryid, calls, total_exec_time, rows FROM pg_stat_statements"
+  metrics:
+    - queryid:
+        usage: "LABEL"
+        description: "Query ID"
+    - calls:
+        usage: "COUNTER"
+        description: "Number of times the query was executed"
+    - total_exec_time:
+        usage: "COUNTER"
+        description: "Total time spent in the query"
+    - rows:
+        usage: "COUNTER"
+        description: "Total number of rows retrieved or affected by the query"

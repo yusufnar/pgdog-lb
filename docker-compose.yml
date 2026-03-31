@@ -63,6 +63,63 @@ services:
       - pg-replica1
       - pg-replica2
 
+  exporter-primary:
+    image: prometheuscommunity/postgres-exporter
+    container_name: exporter-primary
+    environment:
+      DATA_SOURCE_NAME: "postgresql://postgres:secret@pg-primary:5432/appdb?sslmode=disable"
+      PG_EXPORTER_EXTEND_QUERY_PATH: "/queries.yml"
+    volumes:
+      - ./postgres-exporter/queries.yml:/queries.yml
+    depends_on:
+      - pg-primary
+
+  exporter-replica1:
+    image: prometheuscommunity/postgres-exporter
+    container_name: exporter-replica1
+    environment:
+      DATA_SOURCE_NAME: "postgresql://postgres:secret@pg-replica1:5432/appdb?sslmode=disable"
+      PG_EXPORTER_EXTEND_QUERY_PATH: "/queries.yml"
+    volumes:
+      - ./postgres-exporter/queries.yml:/queries.yml
+    depends_on:
+      - pg-replica1
+
+  exporter-replica2:
+    image: prometheuscommunity/postgres-exporter
+    container_name: exporter-replica2
+    environment:
+      DATA_SOURCE_NAME: "postgresql://postgres:secret@pg-replica2:5432/appdb?sslmode=disable"
+      PG_EXPORTER_EXTEND_QUERY_PATH: "/queries.yml"
+    volumes:
+      - ./postgres-exporter/queries.yml:/queries.yml
+    depends_on:
+      - pg-replica2
+
+  prometheus:
+    image: prom/prometheus
+    container_name: prometheus
+    volumes:
+      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+    ports:
+      - "9090:9090"
+    depends_on:
+      - exporter-primary
+      - exporter-replica1
+      - exporter-replica2
+
+  grafana:
+    image: grafana/grafana
+    container_name: grafana
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./grafana/provisioning:/etc/grafana/provisioning
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+    depends_on:
+      - prometheus
+
 volumes:
   pg-primary-data:
   pg-replica1-data:
