@@ -1,3 +1,4 @@
+CREATE EXTENSION IF NOT EXISTS pg_stat_statements;
 ALTER SYSTEM SET wal_level = 'replica';
 
 CREATE ROLE replica WITH REPLICATION LOGIN PASSWORD 'secret';
