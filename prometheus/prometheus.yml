@@ -1,7 +1,0 @@
-global:
-  scrape_interval: 5s
-
-scrape_configs:
-  - job_name: 'postgres'
-    static_configs:
-      - targets: ['exporter-primary:9187', 'exporter-replica1:9187', 'exporter-replica2:9187']
